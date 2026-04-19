@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "finsight-ai"
+version = "1.0.0"
+description = "Real-time market intelligence pipeline — Azure Databricks · Mosaic AI · Power BI"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Vennila Senthilkumar", email = "vennilasenthilkumar2010@gmail.com" }]
+keywords = ["data-engineering", "fintech", "databricks", "mosaic-ai", "delta-lake", "pyspark"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ingestion*", "etl*", "ai*", "serving*", "config*"]
+
+# ── pytest ────────────────────────────────────
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short --cov=. --cov-report=term-missing --cov-report=xml"
+filterwarnings = ["ignore::DeprecationWarning"]
+
+# ── ruff (linting + formatting) ──────────────
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "N",   # pep8-naming
+]
+ignore = ["E501", "B008"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["ingestion", "etl", "ai", "serving", "config"]
+
+# ── mypy ──────────────────────────────────────
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_return_any = true
+warn_unused_configs = true

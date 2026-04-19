@@ -1,0 +1,80 @@
+# ── Secrets & environment ─────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# ── Python ────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.pytest_cache/
+htmlcov/
+
+# ── Virtual environments ──────────────────────
+venv/
+env/
+ENV/
+.venv/
+
+# ── Jupyter / Databricks notebooks ───────────
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ── Local data (never commit raw market data) ─
+data/
+*.parquet
+*.csv
+*.json.gz
+*.delta
+
+# ── Delta Lake local ──────────────────────────
+_delta_log/
+spark-warehouse/
+
+# ── Terraform state ───────────────────────────
+infrastructure/terraform/.terraform/
+infrastructure/terraform/*.tfstate
+infrastructure/terraform/*.tfstate.backup
+infrastructure/terraform/*.tfvars
+!infrastructure/terraform/*.tfvars.example
+
+# ── Docker ────────────────────────────────────
+*.env.docker
+
+# ── IDE ───────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── Logs & tmp ────────────────────────────────
+logs/
+*.log
+tmp/
+temp/
+mlruns/
+
+# ── Power BI ──────────────────────────────────
+*.pbix

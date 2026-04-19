@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  # ── FastAPI server ─────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: finsight-api
+    ports:
+      - "8000:8000"
+    environment:
+      - API_ENV=development
+      - USE_LOCAL_SPARK=true
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./serving:/app/serving
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # ── Redis (cache for API responses) ────────
+  redis:
+    image: redis:7-alpine
+    container_name: finsight-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # ── Prometheus (metrics scraping) ──────────
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: finsight-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: unless-stopped
+
+volumes:
+  redis-data:

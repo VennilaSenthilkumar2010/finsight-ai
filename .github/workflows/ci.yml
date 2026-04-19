@@ -1,0 +1,118 @@
+name: FinSight AI — CI Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ── 1. Lint ────────────────────────────────
+  lint:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dev dependencies
+        run: pip install ruff mypy
+
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+      - name: mypy type check
+        run: mypy . --ignore-missing-imports
+
+  # ── 2. Unit Tests ──────────────────────────
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run unit tests
+        env:
+          POLYGON_API_KEY: ${{ secrets.POLYGON_API_KEY }}
+          NEWSAPI_API_KEY: ${{ secrets.NEWSAPI_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          USE_LOCAL_SPARK: "true"
+        run: pytest tests/unit/ -v --cov=. --cov-report=xml
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.xml
+
+  # ── 3. Build Docker Image ─────────────────
+  build:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t finsightai-api:${{ github.sha }} .
+
+      - name: Run container health check
+        run: |
+          docker run -d -p 8000:8000 \
+            -e POLYGON_API_KEY=test \
+            -e NEWSAPI_API_KEY=test \
+            -e OPENAI_API_KEY=test \
+            -e USE_LOCAL_SPARK=true \
+            --name finsight-test finsightai-api:${{ github.sha }}
+          sleep 5
+          curl --fail http://localhost:8000/health || exit 1
+          docker stop finsight-test
+
+  # ── 4. Deploy (main branch only) ─────────
+  deploy:
+    name: Deploy to Azure
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Push to Azure Container Registry
+        run: |
+          az acr login --name ${{ secrets.ACR_NAME }}
+          docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/finsightai-api:${{ github.sha }} .
+          docker push ${{ secrets.ACR_NAME }}.azurecr.io/finsightai-api:${{ github.sha }}
+
+      - name: Deploy notebooks to Databricks
+        env:
+          DATABRICKS_HOST: ${{ secrets.DATABRICKS_HOST }}
+          DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN }}
+        run: |
+          pip install databricks-sdk
+          python scripts/deploy_notebooks.py
