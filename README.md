@@ -12,7 +12,7 @@
 
 ## What is FinSight AI?
 
-FinSight AI is a **production-grade, plug-and-play data engineering project** that ingests real-time stock and cryptocurrency market data, runs it through a full **Medallion ETL pipeline** (Bronze → Silver → Gold), and applies three AI/ML models using **Databricks Mosaic AI**:
+FinSight AI is a **production-grade, plug-and-play data engineering project** that ingests real-time stock and cryptocurrency market data, runs it through a full **Medallion ETL pipeline** (Bronze[...]
 
 | AI Module | Model | Output |
 |---|---|---|
@@ -210,3 +210,5 @@ Pull requests welcome. Please read [CONTRIBUTING.md](docs/CONTRIBUTING.md) and e
 ## License
 
 MIT © Vennila Senthilkumar
+
+*Last updated: 2026-04-26*
